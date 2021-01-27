@@ -174,6 +174,7 @@ PID_KILL  = re.compile(r'^Killing (\d+):([a-zA-Z0-9._:]+)/[^:]+: (.*)$')
 PID_LEAVE = re.compile(r'^No longer want ([a-zA-Z0-9._:]+) \(pid (\d+)\): .*$')
 PID_DEATH = re.compile(r'^Process ([a-zA-Z0-9._:]+) \(pid (\d+)\) has died.?$')
 LOG_LINE  = re.compile(r'^([A-Z])/(.+?)\( *(\d+)\): (.*?)$')
+RAW_LOG_LINE  = re.compile(r'^([0-9-]+ [0-9:.]+) +(\d+) +\d+ ([A-Z]) (.+?): (.*?)$')
 BUG_LINE  = re.compile(r'.*nativeGetEnabledTags.*')
 BACKTRACE_LINE = re.compile(r'^#(.*?)pc\s(.*?)$')
 
@@ -285,10 +286,18 @@ while adb.poll() is None:
     continue
 
   log_line = LOG_LINE.match(line)
+  is_raw = False
   if log_line is None:
-    continue
+    log_line = RAW_LOG_LINE.match(line)
+    is_raw = True
+    if log_line is None:
+      continue
 
-  level, tag, owner, message = log_line.groups()
+  if is_raw:
+    time, owner, level, tag, message = log_line.groups()
+  else:
+    level, tag, owner, message = log_line.groups()
+    time = ''
   tag = tag.strip()
   start = parse_start_proc(line)
   if start:
@@ -352,6 +361,7 @@ while adb.poll() is None:
   else:
     linebuf += ' ' + level + ' '
   linebuf += ' '
+  linebuf = time + ' ' + linebuf
 
   # format tag message using rules
   for matcher in RULES:
