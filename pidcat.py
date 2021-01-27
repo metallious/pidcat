@@ -38,6 +38,7 @@ parser.add_argument('-l', '--min-level', dest='min_level', type=str, choices=LOG
 parser.add_argument('--color-gc', dest='color_gc', action='store_true', help='Color garbage collection')
 parser.add_argument('--always-display-tags', dest='always_tags', action='store_true',help='Always display the tag name')
 parser.add_argument('--current', dest='current_app', action='store_true',help='Filter logcat by current running app')
+parser.add_argument('--time', dest='with_time', action='store_true',help='Include timestamp in log lines')
 parser.add_argument('-s', '--serial', dest='device_serial', help='Device serial number (adb -s option)')
 parser.add_argument('-d', '--device', dest='use_device', action='store_true', help='Use first device for log input (adb -d option)')
 parser.add_argument('-e', '--emulator', dest='use_emulator', action='store_true', help='Use first emulator for log input (adb -e option)')
@@ -180,7 +181,8 @@ BACKTRACE_LINE = re.compile(r'^#(.*?)pc\s(.*?)$')
 
 adb_command = base_adb_command[:]
 adb_command.append('logcat')
-adb_command.extend(['-v', 'brief'])
+if not args.with_time:
+  adb_command.extend(['-v', 'brief'])
 
 # Clear log before starting logcat
 if args.clear_logcat:
